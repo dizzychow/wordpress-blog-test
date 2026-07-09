@@ -2,7 +2,7 @@
 name: 测试用例
 about: 单条测试用例任务
 title: "[用例] "
-labels: type: 测试用例
+labels: "type: 测试用例"
 assignees: ''
 ---
 
