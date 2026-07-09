@@ -2,7 +2,7 @@
 name: Bug 缺陷反馈
 about: 提交 WordPress 站点的功能/样式缺陷
 title: "[Bug] "
-labels: type: Bug
+labels: "type: Bug"
 assignees: ''
 ---
 
