@@ -6,9 +6,6 @@ labels: "type: Bug"
 assignees: ''
 ---
 
-缺陷标题
-[模块] 简明描述
-
 一、测试环境
 Windows 11, Edge浏览器, WordPress 6, 数据库 MySQL 5.7
 
