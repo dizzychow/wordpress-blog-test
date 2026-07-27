@@ -1,0 +1,1012 @@
+{
+	"info": {
+		"_postman_id": "wordpress-api-test",
+		"name": "WordPress API 测试",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://120.25.77.137",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "DzChow",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "5BZO 7fxY 63vq KfRf pA3s SqEe",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "认证与权限",
+			"item": [
+				{
+					"name": "API-001 无认证获取文章列表",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"返回数组\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				},
+				{
+					"name": "API-002 无认证创建文章（应拒绝）",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码401\", () => pm.response.to.have.status(401));",
+									"pm.test(\"错误码rest_cannot_create\", () => pm.expect(pm.response.json().code).to.eql('rest_cannot_create'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"test\",\"content\":\"test\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				},
+				{
+					"name": "API-003 错误密码访问",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码401\", () => pm.response.to.have.status(401));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "123456", "type": "string" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "users", "me"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "文章 (Posts)",
+			"item": [
+				{
+					"name": "API-004 创建文章（草稿）",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码201\", () => pm.response.to.have.status(201));",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"返回文章ID为数字\", () => pm.expect(jsonData.id).to.be.a('number'));",
+									"pm.test(\"文章状态为draft\", () => pm.expect(jsonData.status).to.eql('draft'));",
+									"pm.environment.set('post_id', jsonData.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"API测试文章\",\"content\":\"内容\",\"status\":\"draft\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				},
+				{
+					"name": "API-005 获取所有已发布文章",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"返回数组\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				},
+				{
+					"name": "API-006 获取单篇文章",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"id与请求一致\", () => pm.expect(jsonData.id).to.eql(pm.environment.get('post_id')));",
+									"pm.test(\"包含title.rendered\", () => pm.expect(jsonData.title.rendered).to.be.a('string'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts/{{post_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts", "{{post_id}}"]
+						}
+					}
+				},
+				{
+					"name": "API-007 更新文章标题",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.title.raw) pm.expect(jsonData.title.raw).to.eql('新标题');",
+									"else if (jsonData.title) pm.expect(jsonData.title).to.eql('新标题');"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"新标题\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts/{{post_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts", "{{post_id}}"]
+						}
+					}
+				},
+				{
+					"name": "API-008 删除文章",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.status) pm.expect(jsonData.status).to.eql('trash');"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts/{{post_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts", "{{post_id}}"]
+						}
+					}
+				},
+				{
+					"name": "API-009 获取不存在的文章",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码404\", () => pm.response.to.have.status(404));",
+									"pm.test(\"rest_post_invalid_id\", () => pm.expect(pm.response.json().code).to.eql('rest_post_invalid_id'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts/99999",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts", "99999"]
+						}
+					}
+				},
+				{
+					"name": "API-010 标题为空",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const code = pm.response.code;",
+									"if (code === 201) {",
+									"  pm.test(\"状态码201\", () => pm.response.to.have.status(201));",
+									"  pm.test(\"标题空\", () => pm.expect(pm.response.json().title.raw).to.be.empty);",
+									"} else if (code === 400) {",
+									"  pm.test(\"状态码400\", () => pm.response.to.have.status(400));",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"\",\"content\":\"test\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				},
+				{
+					"name": "API-011 内容超长",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码201\", () => pm.response.to.have.status(201));",
+									"pm.test(\"响应时间<5000ms\", () => pm.expect(pm.response.responseTime).to.be.below(5000));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"超长内容测试\",\"content\":\"{{long_content}}\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				},
+				{
+					"name": "API-012 分页per_page=2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"长度≤2\", () => pm.expect(pm.response.json().length).to.be.at.most(2));",
+									"pm.test(\"响应头X-WP-Total\", () => pm.response.to.have.header('X-WP-Total'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts?per_page=2",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"],
+							"query": [{"key": "per_page", "value": "2"}]
+						}
+					}
+				},
+				{
+					"name": "API-013 按分类过滤",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts?categories={{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"],
+							"query": [{"key": "categories", "value": "{{category_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "API-014 搜索关键词",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"var data = pm.response.json();",
+									"if (data.length > 0) pm.test(\"包含关键词\", () => pm.expect(data[0].title.rendered).to.include('测试'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts?search=测试",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"],
+							"query": [{"key": "search", "value": "测试"}]
+						}
+					}
+				},
+				{
+					"name": "API-015 按日期降序",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"var data = pm.response.json();",
+									"if (data.length >= 2) {",
+									"  var d1 = new Date(data[0].date), d2 = new Date(data[1].date);",
+									"  pm.test(\"降序排列\", () => pm.expect(d1 >= d2).to.be.true);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts?orderby=date&order=desc",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"],
+							"query": [{"key": "orderby", "value": "date"}, {"key": "order", "value": "desc"}]
+						}
+					}
+				},
+				{
+					"name": "API-016 缺少必填参数",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码400\", () => pm.response.to.have.status(400));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"content\":\"test\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "用户 (Users)",
+			"item": [
+				{
+					"name": "API-017 获取当前用户信息",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"var data = pm.response.json();",
+									"pm.test(\"包含name, email, id\", () => {",
+									"  pm.expect(data.name).to.be.a('string');",
+									"  pm.expect(data.email).to.be.a('string');",
+									"  pm.expect(data.id).to.be.a('number');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "users", "me"]
+						}
+					}
+				},
+				{
+					"name": "API-018 获取用户列表",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"返回数组\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/users",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "users"]
+						}
+					}
+				},
+				{
+					"name": "API-019 创建新用户",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码201\", () => pm.response.to.have.status(201));",
+									"pm.test(\"用户名testuser\", () => pm.expect(pm.response.json().username).to.eql('testuser'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"testuser\",\"email\":\"test@test.com\",\"password\":\"Test1234!\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/users",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "users"]
+						}
+					}
+				},
+				{
+					"name": "API-020 创建重复用户名",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码400\", () => pm.response.to.have.status(400));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"admin\",\"email\":\"admin@test.com\",\"password\":\"Test1234!\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/users",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "users"]
+						}
+					}
+				},
+				{
+					"name": "API-021 邮箱格式无效",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码400\", () => pm.response.to.have.status(400));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"user2\",\"email\":\"invalid-email\",\"password\":\"Test1234!\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/users",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "users"]
+						}
+					}
+				},
+				{
+					"name": "API-022 无认证获取用户列表",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200或401\", () => pm.expect(pm.response.code).to.be.oneOf([200,401]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/users",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "users"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "评论 (Comments)",
+			"item": [
+				{
+					"name": "API-023 获取文章评论",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"返回数组\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/comments?post={{post_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "comments"],
+							"query": [{"key": "post", "value": "{{post_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "API-024 发表评论",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码201\", () => pm.response.to.have.status(201));",
+									"pm.test(\"内容匹配\", () => pm.expect(pm.response.json().content.rendered).to.include('API评论'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"post\":{{post_id}},\"content\":\"这是一条API评论\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/comments",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "comments"]
+						}
+					}
+				},
+				{
+					"name": "API-025 无认证发表评论",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码401\", () => pm.response.to.have.status(401));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"post\":{{post_id}},\"content\":\"匿名评论\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/comments",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "comments"]
+						}
+					}
+				},
+				{
+					"name": "API-026 空内容评论",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码400\", () => pm.response.to.have.status(400));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"post\":{{post_id}},\"content\":\"\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/comments",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "comments"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "媒体 (Media)",
+			"item": [
+				{
+					"name": "API-027 上传图片",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码201\", () => pm.response.to.have.status(201));",
+									"pm.test(\"类型为image\", () => pm.expect(pm.response.json().media_type).to.eql('image'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{ "key": "file", "type": "file", "src": "选择图片文件" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/media",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "media"]
+						}
+					}
+				},
+				{
+					"name": "API-028 上传PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码201\", () => pm.response.to.have.status(201));",
+									"pm.test(\"类型为file\", () => pm.expect(pm.response.json().media_type).to.eql('file'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{ "key": "username", "value": "{{username}}", "type": "string" },
+								{ "key": "password", "value": "{{password}}", "type": "string" }
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{ "key": "file", "type": "file", "src": "选择PDF文件" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/media",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "media"]
+						}
+					}
+				},
+				{
+					"name": "API-029 无认证上传",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码401\", () => pm.response.to.have.status(401));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{ "key": "file", "type": "file", "src": "选择图片文件" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/media",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "media"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "异常场景",
+			"item": [
+				{
+					"name": "API-030 per_page=abc",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"rest_invalid_param\", () => pm.expect(pm.response.json().code).to.eql('rest_invalid_param'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts?per_page=abc",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"],
+							"query": [{"key": "per_page", "value": "abc"}]
+						}
+					}
+				},
+				{
+					"name": "API-031 POST获取列表",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码不是200\", () => pm.expect(pm.response.code).to.not.eql(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/posts",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "posts"]
+						}
+					}
+				},
+				{
+					"name": "API-032 不存在的路由",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"状态码404\", () => pm.response.to.have.status(404));",
+									"pm.test(\"rest_no_route\", () => pm.expect(pm.response.json().code).to.eql('rest_no_route'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wp-json/wp/v2/nonexistent",
+							"host": ["{{base_url}}"],
+							"path": ["wp-json", "wp", "v2", "nonexistent"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
