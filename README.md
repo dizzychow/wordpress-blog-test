@@ -10,26 +10,29 @@
 `Linux` `Docker` `MySQL` `Postman` `Newman` `JMeter` `OWASP ZAP` `Selenium` `Python` `pytest` `Git` `阿里云 ECS`
 
 ## 📂 项目结构
+
+```
 ├── README.md
 ├── 测试计划.md
 ├── 功能测试/
-│ ├── 功能测试用例集 # 48 条用例
-│ └── 测试报告 # 4 个有效缺陷
+│   ├── 功能测试用例集.csv      # 48 条用例
+│   └── 功能测试报告.docx          # 4 个有效缺陷
 ├── 接口测试/
-│ ├── 接口测试用例集 # 32 条用例
-│ └── 接口测试脚本
+│   ├── 接口测试用例集.csv        # 32 条用例
+│   ├── postman-collection.json    # 接口测试脚本
 ├── 性能测试/
-│ ├── 性能测试报告
-│ └── 性能测试线程组基本配置
-│ └── 性能测试结果
+│   ├── 性能测试报告.docx
+│   ├── performance-test.jmx       # JMeter 线程组配置
+│   └── 性能测试结果.csv
 ├── 安全测试/
-│ ├── 安全测试报告
-│ └── ZAP扫描报告
+│   ├── 安全测试报告.docx
+│   └── zap-scan-report.html       # ZAP 扫描报告
 ├── UI自动化测试/
-│ ├── 测试框架基础配置
-│ ├── 搜索文章自动化脚本
-│ └── pytest HTML 报告
+│   ├── conftest.py                # pytest 框架配置
+│   ├── test_search.py             # 搜索文章自动化脚本
+│   └── pytest-report.html         #测试报告
 ├── 测试复盘文档.md
+```
 
 ## 📊 测试产出清单
 
